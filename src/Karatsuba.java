@@ -3,6 +3,8 @@ public class Karatsuba {
         answer = ""+karatsuba(X, Y);
     }
 
+    public Karatsuba(){}
+
     public int karatsuba(int X, int Y){
         int maxLength = Math.max(String.valueOf(X).length(), String.valueOf(Y).length());
         //removed unneeded string building since 0 is 0
@@ -34,6 +36,12 @@ public class Karatsuba {
 
     public static void main(String[] args) {
         System.out.println("Answer: " + new Karatsuba(1234,78));
+        System.out.println("Answer: " + (1234 *78));
         System.out.println("Answer: " + new Karatsuba(1234,5678));
+        System.out.println("Answer: " + (1234 * 5678));
+        System.out.println("Answer: " + new Karatsuba(1234,2));
+        System.out.println("Answer: " + (1234 *2));
+        System.out.println("Answer: " + new Karatsuba(1234,12341234));
+        System.out.println("Answer: " + (1234 * 12341234));
     }
 }
