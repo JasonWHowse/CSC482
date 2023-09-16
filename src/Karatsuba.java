@@ -1,4 +1,7 @@
 public class Karatsuba {
+
+    public static int count = 0;
+
     public Karatsuba( int  X, int Y ) {
         answer = ""+karatsuba(X, Y);
     }
@@ -6,6 +9,7 @@ public class Karatsuba {
     public Karatsuba(){}
 
     public int karatsuba(int X, int Y){
+        count++;
         int maxLength = Math.max(String.valueOf(X).length(), String.valueOf(Y).length());
         //removed unneeded string building since 0 is 0
         if(maxLength==1){
