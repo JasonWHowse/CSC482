@@ -139,10 +139,12 @@ public class Heap<T> {
         HeapNode itemToDelete = arr[index];
         itemToDelete.setPriority(Integer.MAX_VALUE);
         heapify_Down(index);
-        if(itemToDelete == itemToDelete.getParent().getChildOne()){
-            itemToDelete.getParent().setChildOne(null);
-        }else{
-            itemToDelete.getParent().setChildTwo(null);
+        if(null!=itemToDelete.getParent()) {
+            if (itemToDelete == itemToDelete.getParent().getChildOne()) {
+                itemToDelete.getParent().setChildOne(null);
+            } else {
+                itemToDelete.getParent().setChildTwo(null);
+            }
         }
         arr[position.get(itemToDelete.value())] = null;
         length--;
