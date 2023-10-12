@@ -1,4 +1,3 @@
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class NearShortestRoute {
@@ -134,6 +133,10 @@ public class NearShortestRoute {
         return this;
     }
 
+    public int[] getDistanceList() {
+        return distanceList;
+    }
+
     public boolean removeEdge (int node, int destination){
         return nodes.get(node).deleteEdge(destination);
     }
@@ -167,12 +170,11 @@ public class NearShortestRoute {
                 }
             }
         }
+
         return nodes.get(finish);
     }
 
-    public int getShortestPathUsingNoEdgesOfShortestPathDistance(int start, int finish){
-        return -1;
-    }
+
 
     public static void main(String[] args) {
         int numNodes = 9;
@@ -200,6 +202,10 @@ public class NearShortestRoute {
         int startNode = 0;
         Node temp = NSR.setShortestPath(startNode, 8);
         System.out.println(temp);
+        System.out.println(NSR.getDistanceList()[8]);
         System.out.println(NSR.removeShortestPath(temp));
+        temp = NSR.setShortestPath(startNode, 8);
+        System.out.println(temp);
+        System.out.println(NSR.getDistanceList()[8]);
     }
 }
