@@ -1,37 +1,42 @@
-import java.util.Objects;
 public class HeapNode <T>{
-    private int priorityValue = Integer.MAX_VALUE;
+    private int priorityValue;
     private T obj;
-    private HeapNode childOne;
-    private HeapNode childTwo;
-    private HeapNode parent;
+    private HeapNode<T> childOne;
+    private HeapNode<T> childTwo;
+    private HeapNode<T> parent;
 
     public HeapNode(T obj, int priorityValue){
         this.priorityValue = priorityValue;
         this.obj = obj;
     }
 
-    public HeapNode setPriority(int priority){
+    public HeapNode<T> setPriority(int priority){
         this.priorityValue = priority;
         return this;
     }
 
-    public HeapNode setChildOne(HeapNode node){
+    public HeapNode<T> setChildOne(HeapNode<T> node){
         childOne = node;
+        if(node!=null) {
+            node.setParent(this);
+        }
         return this;
     }
 
-    public HeapNode setChildTwo(HeapNode node){
+    public HeapNode<T> setChildTwo(HeapNode<T> node){
         childTwo = node;
+        if(node!=null) {
+            node.setParent(this);
+        }
         return this;
     }
 
-    public HeapNode setParent(HeapNode parent) {
+    public HeapNode<T> setParent(HeapNode<T> parent) {
         this.parent = parent;
         return this;
     }
 
-    public HeapNode update(T obj){
+    public HeapNode<T> update(T obj){
         this.obj = obj;
         return this;
     }
@@ -39,15 +44,15 @@ public class HeapNode <T>{
         return priorityValue;
     }
 
-    public HeapNode getChildOne(){
+    public HeapNode<T> getChildOne(){
         return childOne;
     }
 
-    public HeapNode getChildTwo(){
+    public HeapNode<T> getChildTwo(){
         return childTwo;
     }
 
-    public HeapNode getParent() {
+    public HeapNode<T> getParent() {
         return parent;
     }
 
@@ -57,6 +62,11 @@ public class HeapNode <T>{
 
     @Override
     public String toString() {
-        return "Val: " + obj.toString() + " P: " + priorityValue;
+        return this.NodeInfo() + "Val: " + obj.toString();
+    }
+
+
+    private String NodeInfo(){
+        return "P: " + this.priorityValue + " " + "PP: " + (this.parent!=null?this.parent.getPriority():"null") + " " + "C1P: " + (this.childOne!=null?this.childOne.getPriority():"null") + " " + "C2P: " + (this.childTwo!=null?this.childTwo.getPriority():"null") + " ";
     }
 }

@@ -1,50 +1,42 @@
 import java.util.*;
 
 public class NearShortestRoute {
-    private ArrayList<Node> nodes;
-    private int[] distanceList;
-    private boolean [] haveVisited;
-    Heap<Edge> hn;
+    private final ArrayList<NearShortestRoute.Node> nodes;
+    private final int[] distanceList;
+    private final boolean [] haveVisited;
+    private final Heap<NearShortestRoute.Edge> hn;
 
     @Override
     public String toString() {
-        String output = "";
-        for (Node node: nodes){
-            for(Edge edge : node.getEdges()){
-                output += "Node: " + node.getName() + " to: " + edge.getDestination().getName() + " at " + edge.getDistance() + "\r\n";
+        StringBuilder output = new StringBuilder();
+        for (NearShortestRoute.Node node: nodes){
+            for(NearShortestRoute.Edge edge : node.getEdges()){
+                output.append("Node: ").append(node.getName()).append(" to: ").append(edge.getDestination().getName()).append(" at ").append(edge.getDistance()).append("\r\n");
             }
-            output+="\r\n";
+            output.append(node.getEdges().size() == 0 ? "" : "\r\n");
         }
-        return output;
+        return output.toString();
     }
 
-    private class Node{
-        private ArrayList<Edge> edges;
-        private int name;
+    public static class Node{
+        private final ArrayList<NearShortestRoute.Edge> edges;
+        private final int name;
 
-        private Node previousNode = null;
+        private ArrayList<NearShortestRoute.Node> previousNodes;
 
-        public Node(int name, ArrayList<Edge> edges){
-            this.edges = edges;
+        public Node(int name){
+            this.edges = new ArrayList<>(0);
+            this.previousNodes = new ArrayList<>(0);
             this.name = name;
         }
 
-        public Node(int name){
-            this(name, new ArrayList<Edge>(0));
-        }
-
-        public Node addEdge(Edge edge){
+        public NearShortestRoute.Node addEdge(NearShortestRoute.Edge edge){
             this.edges.add(edge);
             return this;
         }
 
-        public Node addEdge(Node destination, int distance){
-            this.addEdge(new Edge(destination, distance));
-            return this;
-        }
-
-        public Edge getEdge(int destination){
-            for (Edge edge : edges){
+        public NearShortestRoute.Edge getEdge(int destination){
+            for (NearShortestRoute.Edge edge : edges){
                 if(destination==edge.destination.name){
                     return edge;
                 }
@@ -60,11 +52,11 @@ public class NearShortestRoute {
             return this.name;
         }
 
-        public ArrayList<Edge> getEdges(){
+        public ArrayList<NearShortestRoute.Edge> getEdges(){
             return this.edges;
         }
 
-        public boolean deleteEdge(Edge edge){
+        public boolean deleteEdge(NearShortestRoute.Edge edge){
             return this.edges.remove(edge);
         }
 
@@ -72,30 +64,32 @@ public class NearShortestRoute {
             return this.deleteEdge(this.getEdge(destination));
         }
 
-        public Node getPreviousNode() {
-            return previousNode;
+        public ArrayList<NearShortestRoute.Node> getPreviousNode() {
+            return previousNodes;
         }
 
-        public Node setPreviousNode(Node previousNode) {
-            this.previousNode = previousNode;
+        public NearShortestRoute.Node setPreviousNode(NearShortestRoute.Node previousNode) {
+            this.previousNodes = new ArrayList<>();
+            this.previousNodes.add(previousNode);
+            return this;
+        }
+
+        public NearShortestRoute.Node addPreviousNode(NearShortestRoute.Node previousNode){
+            this.previousNodes.add(previousNode);
             return this;
         }
 
         @Override
         public String toString() {
-            return "Node{" +
-                    "edges=" + edges.size() +
-                    ", name=" + name +
-                    ", previousNode=" + previousNode +
-                    '}';
+            return "From " + (previousNodes!=null && previousNodes.size()>0 ?previousNodes.get(0).getName():"None") + " -> " + name;
         }
     }
 
-    private class Edge{
-        private int distance;
-        private Node destination;
+    public static class Edge{
+        private final int distance;
+        private final NearShortestRoute.Node destination;
 
-        public Edge(Node destination, int distance){
+        public Edge(NearShortestRoute.Node destination, int distance){
             this.destination = destination;
             this.distance = distance;
         }
@@ -104,7 +98,7 @@ public class NearShortestRoute {
             return distance;
         }
 
-        public Node getDestination() {
+        public NearShortestRoute.Node getDestination() {
             return destination;
         }
 
@@ -117,14 +111,14 @@ public class NearShortestRoute {
         }
     }
 
-    public NearShortestRoute(int n) {
-        this.nodes = new ArrayList<Node>(n);
+    public NearShortestRoute(int n, int e) {
+        this.nodes = new ArrayList<>(n);
         for(int i = 0; i< n; i++){
             this.nodes.add(new Node(i));
         }
         this.distanceList = new int[n];
         this.haveVisited = new boolean[n];
-        this.hn = new Heap<Edge>(n);
+        this.hn = new Heap<>(e);
         Arrays.fill(this.distanceList, -1);
     }
 
@@ -137,35 +131,55 @@ public class NearShortestRoute {
         return distanceList;
     }
 
-    public boolean removeEdge (int node, int destination){
-        return nodes.get(node).deleteEdge(destination);
+    public NearShortestRoute resetPath(){
+        Arrays.fill(this.distanceList, -1);
+        Arrays.fill(this.haveVisited, false);
+        return this;
     }
 
-    public NearShortestRoute removeShortestPath(Node previousNode){
-        while(previousNode!=null && previousNode.getPreviousNode()!=null){
-            this.removeEdge(previousNode.getPreviousNode().getName(), previousNode.getName());
-            previousNode = previousNode.getPreviousNode();
+    public NearShortestRoute removeEdge (int node, int destination){
+        nodes.get(node).deleteEdge(destination);
+        return this;
+    }
+
+    public NearShortestRoute removeShortestPath(NearShortestRoute.Node previousNode){
+        Queue<NearShortestRoute.Node> previousNodeList = new LinkedList<>();
+        previousNodeList.add(previousNode);
+        while(previousNodeList.size()>0){
+            for(int i = 0; i< (previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().size() : 0); i++){
+                if((previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode() : null) != null || (previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().size() : 0) >0) {
+                    this.removeEdge(previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().get(i).getName() : 0, previousNodeList.peek() != null ? previousNodeList.peek().getName() : 0);
+                    previousNodeList.add(previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().get(i) : null);
+                }
+            }
+            previousNodeList.poll();
         }
         return this;
     }
 
-    public Node setShortestPath(int start, int finish){
-        ArrayList<Edge> output = new ArrayList<Edge>(0);
+    public NearShortestRoute.Node setShortestPath(int start, int finish){
         this.distanceList[start] = 0;
         this.hn.insert(new Edge(nodes.get(start), 0), 0);
         while(hn.length() != 0){
-            Edge current = hn.extractMin();
-            Node currentNode = current.getDestination();
+            NearShortestRoute.Edge current = hn.extractMin();
+            NearShortestRoute.Node currentNode = current.getDestination();
             this.haveVisited[currentNode.getName()] = true;
 
-            ArrayList<Edge> edges = this.nodes.get(currentNode.getName()).getEdges();
-
+            ArrayList<NearShortestRoute.Edge> edges = this.nodes.get(currentNode.getName()).getEdges();
             for(int i = 0; i < this.nodes.get(currentNode.getName()).getEdgeCount(); i++){
                 int neighborName = edges.get(i).getDestination().getName();
                 int neighborDistance = edges.get(i).getDistance();
-                if(!haveVisited[neighborName] && distanceList[currentNode.getName()] != -1 && distanceList[currentNode.getName()] + neighborDistance < (distanceList[neighborName]<0?Integer.MAX_VALUE:distanceList[neighborName])){
+                if(     !haveVisited[neighborName] &&
+                        distanceList[currentNode.getName()] != -1 &&
+                        distanceList[currentNode.getName()] + neighborDistance < (distanceList[neighborName]<0?Integer.MAX_VALUE:distanceList[neighborName])){
                     distanceList[neighborName] = distanceList[currentNode.getName()] + neighborDistance;
                     edges.get(i).getDestination().setPreviousNode(currentNode);
+                    this.hn.insert(edges.get(i), distanceList[neighborName]);
+                }else if(     !haveVisited[neighborName] &&
+                        distanceList[currentNode.getName()] != -1 &&
+                        distanceList[currentNode.getName()] + neighborDistance == (distanceList[neighborName]<0?Integer.MAX_VALUE:distanceList[neighborName])) {
+                    distanceList[neighborName] = distanceList[currentNode.getName()] + neighborDistance;
+                    edges.get(i).getDestination().addPreviousNode(currentNode);
                     this.hn.insert(edges.get(i), distanceList[neighborName]);
                 }
             }
@@ -174,38 +188,19 @@ public class NearShortestRoute {
         return nodes.get(finish);
     }
 
-
-
-    public static void main(String[] args) {
-        int numNodes = 9;
-        NearShortestRoute NSR = new NearShortestRoute(numNodes);
-
-        // Add edges and weights
-        NSR.addEdge(0, 1, 1).addEdge(0, 3, 5);
-
-        NSR.addEdge(1, 2, 1).addEdge(1, 3, 8);
-
-        NSR.addEdge(2, 4, 6);
-
-        NSR.addEdge(3, 2, 1).addEdge(3, 4, 1);
-
-        NSR.addEdge(4, 5, 10).addEdge(4, 7, 5);
-
-        NSR.addEdge(5, 6, 1).addEdge(5, 7, 2);
-
-        NSR.addEdge(6, 8, 4);
-
-        NSR.addEdge(7, 5, 3).addEdge(7, 6, 9).addEdge(7, 8, 2);
-
-
-        System.out.println(NSR);
-        int startNode = 0;
-        Node temp = NSR.setShortestPath(startNode, 8);
-        System.out.println(temp);
-        System.out.println(NSR.getDistanceList()[8]);
-        System.out.println(NSR.removeShortestPath(temp));
-        temp = NSR.setShortestPath(startNode, 8);
-        System.out.println(temp);
-        System.out.println(NSR.getDistanceList()[8]);
+    public static void main(String[] args)  {
+        Scanner input= new Scanner(System.in);
+        for(int[] a = new int[]{input.nextInt(),input.nextInt()};!(a[0]==0 && a[1]==0);a=new int[]{input.nextInt(),input.nextInt()}){
+            int edges = a[1];
+            NearShortestRoute NSR = new NearShortestRoute(a[0], edges);
+            int[] SF = new int[]{input.nextInt(),input.nextInt()};
+            for(int i = 0; i< edges;i++){
+                NSR.addEdge(input.nextInt(), input.nextInt(), input.nextInt());
+            }
+            NearShortestRoute.Node shortNode  = NSR.setShortestPath(SF[0],SF[1]);
+            NSR.removeShortestPath(shortNode).resetPath().setShortestPath(SF[0],SF[1]);
+            int newLength=NSR.getDistanceList()[SF[1]];
+            System.out.println(newLength);
+        }
     }
 }

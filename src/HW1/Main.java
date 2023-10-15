@@ -1,6 +1,5 @@
 package HW1;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,81 +7,62 @@ import java.util.Queue;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
-        /*
-        int numNodes = 9;
-        NearShortestRoute NSR = new NearShortestRoute(numNodes);
-
-        // Add edges and weights
-        NSR.addEdge(0, 1, 1).addEdge(0, 3, 5);
-
-        NSR.addEdge(1, 2, 1).addEdge(1, 3, 8);
-
-        NSR.addEdge(2, 4, 6);
-
-        NSR.addEdge(3, 2, 1).addEdge(3, 4, 1);
-
-        NSR.addEdge(4, 5, 10).addEdge(4, 7, 5);
-
-        NSR.addEdge(5, 6, 1).addEdge(5, 7, 2);
-
-        NSR.addEdge(6, 8, 4);
-
-        NSR.addEdge(7, 5, 3).addEdge(7, 6, 9).addEdge(7, 8, 2);
-
-
-        System.out.println(NSR);
-        int startNode = 0;
-        System.out.println("Distance: " + NSR.getDistanceList()[8]);
-        NearShortestRoute.Node temp = NSR.setShortestPath(startNode, 8);
-        System.out.println(temp);
-        System.out.println("Distance: " + NSR.getDistanceList()[8]);
-        System.out.println(NSR.removeShortestPath(temp));
-        NSR.resetPath();
-        temp = NSR.setShortestPath(startNode, 8);
-        System.out.println(temp);
-        System.out.println("Distance: " + NSR.getDistanceList()[8]);
-        for(int i = 0; i<NSR.getDistanceList().length; i++){
-            System.out.println("" + i + ": " + NSR.getDistanceList()[i]);
+    public static void main(String[] args)  {
+        Scanner input= new Scanner(System.in);
+        for(int[] a = new int[]{input.nextInt(),input.nextInt()};!(a[0]==0 && a[1]==0);a=new int[]{input.nextInt(),input.nextInt()}){
+            int edges = a[1];
+            NearShortestRoute NSR = new NearShortestRoute(a[0], edges);
+            int[] SF = new int[]{input.nextInt(),input.nextInt()};
+            for(int i = 0; i< edges;i++){
+                NSR.addEdge(input.nextInt(), input.nextInt(), input.nextInt());
+            }
+            NearShortestRoute.Node shortNode  = NSR.setShortestPath(SF[0],SF[1]);
+            NSR.removeShortestPath(shortNode).resetPath().setShortestPath(SF[0],SF[1]);
+            int newLength=NSR.getDistanceList()[SF[1]];
+            System.out.println(newLength);
         }
-        */
-
     }
 }
 
 class HeapNode <T>{
-    private int priorityValue = Integer.MAX_VALUE;
+    private int priorityValue;
     private T obj;
-    private HeapNode childOne;
-    private HeapNode childTwo;
-    private HeapNode parent;
+    private HeapNode<T> childOne;
+    private HeapNode<T> childTwo;
+    private HeapNode<T> parent;
 
     public HeapNode(T obj, int priorityValue){
         this.priorityValue = priorityValue;
         this.obj = obj;
     }
 
-    public HeapNode setPriority(int priority){
+    public HeapNode<T> setPriority(int priority){
         this.priorityValue = priority;
         return this;
     }
 
-    public HeapNode setChildOne(HeapNode node){
+    public HeapNode<T> setChildOne(HeapNode<T> node){
         childOne = node;
+        if(node!=null) {
+            node.setParent(this);
+        }
         return this;
     }
 
-    public HeapNode setChildTwo(HeapNode node){
+    public HeapNode<T> setChildTwo(HeapNode<T> node){
         childTwo = node;
+        if(node!=null) {
+            node.setParent(this);
+        }
         return this;
     }
 
-    public HeapNode setParent(HeapNode parent) {
+    public HeapNode<T> setParent(HeapNode<T> parent) {
         this.parent = parent;
         return this;
     }
 
-    public HeapNode update(T obj){
+    public HeapNode<T> update(T obj){
         this.obj = obj;
         return this;
     }
@@ -90,15 +70,15 @@ class HeapNode <T>{
         return priorityValue;
     }
 
-    public HeapNode getChildOne(){
+    public HeapNode<T> getChildOne(){
         return childOne;
     }
 
-    public HeapNode getChildTwo(){
+    public HeapNode<T> getChildTwo(){
         return childTwo;
     }
 
-    public HeapNode getParent() {
+    public HeapNode<T> getParent() {
         return parent;
     }
 
@@ -108,61 +88,42 @@ class HeapNode <T>{
 
     @Override
     public String toString() {
-        return "Val: " + obj.toString() + " P: " + priorityValue;
+        return this.NodeInfo() + "Val: " + obj.toString();
+    }
+
+
+    private String NodeInfo(){
+        return "P: " + this.priorityValue + " " + "PP: " + (this.parent!=null?this.parent.getPriority():"null") + " " + "C1P: " + (this.childOne!=null?this.childOne.getPriority():"null") + " " + "C2P: " + (this.childTwo!=null?this.childTwo.getPriority():"null") + " ";
     }
 }
 
 class Heap<T> {
-    private HeapNode[] arr;
+    private HeapNode<T>[] arr;
     private int length = 0;
-    private HashMap<T, Integer> position = new HashMap<T, Integer>();
+    final private HashMap<T, Integer> position = new HashMap<>();
 
     public Heap(int N){
         this.startHeap(N);
     }
 
-    public Heap(T[] arr){
-        this(arr.length);
-        Queue<HeapNode<T>> parentStack = new LinkedList<>();
-        int cCount = 0;
-        for(int p = 1; p<=this.arr.length;p++){
-            this.arr[p-1] = new HeapNode<T>(arr[p-1], p);
-            position.put(arr[p-1],p-1);
-            parentStack.add(this.arr[p-1]);
-            if(cCount == 1){
-                parentStack.peek().setChildOne(this.arr[p-1].setParent(parentStack.peek()));
-                parentStack.peek().getChildOne().setPriority(parentStack.peek().getPriority()*2);
-            }else if (cCount==2){
-                parentStack.peek().setChildTwo(this.arr[p-1].setParent(parentStack.peek()));
-                parentStack.peek().getChildOne().setPriority(parentStack.peek().getPriority()*2+1);
-                parentStack.poll();
-                cCount=0;
-            }
-            length++;
-            cCount++;
-        }
-    }
-
     public void heapify_Up(int index){
         if(arr[index].getParent()!=null && arr[index].getPriority()<arr[index].getParent().getPriority()){
-            heapify_Up(swapHeapNodes(arr[index], arr[index].getParent()));
+            heapify_Up(swapHeapNodes(arr[index], arr[index].getParent())[0]);
             checker();
         }
     }
 
     public void heapify_Down(int index){
         var node = arr[index];
-        if(node.getChildOne() != null &&
-                (node.getChildTwo()== null ||
-                        node.getChildTwo().getPriority()>node.getChildOne().getPriority()) &&
-                node.getChildOne().getPriority()<node.getPriority()) {
-            swapHeapNodes(node.getChildOne(),node);
-            heapify_Down(position.get(node.value()));
+        if(     node.getChildOne() != null &&
+               (node.getChildTwo()== null ||
+               node.getChildTwo().getPriority()>node.getChildOne().getPriority()) &&
+               node.getChildOne().getPriority()<node.getPriority()) {
+            heapify_Down(swapHeapNodes(node.getChildOne(),node)[1]);
             checker();
         }else if (node.getChildTwo() != null &&
                 node.getChildTwo().getPriority()<node.getPriority()){
-            swapHeapNodes(node.getChildTwo(),node);
-            heapify_Down(position.get(node.value()));
+            heapify_Down(swapHeapNodes(node.getChildTwo(),node)[1]);
             checker();
         }
     }
@@ -176,88 +137,81 @@ class Heap<T> {
         }
     }
 
-    private int swapHeapNodes(HeapNode Swap1, HeapNode Swap2){
-        int parIndex = position.get(Swap2.value());
-        int chiIndex = position.get(Swap1.value());
-        HeapNode tempChild1 = Swap1.getChildOne();
-        HeapNode tempChild2 = Swap1.getChildTwo();
-        if(Swap2.getChildOne()==Swap1){
-            Swap1.setChildOne(Swap2).setChildTwo(Swap2.getChildTwo()).setParent(Swap2.getParent());
-        }else{
-            Swap1.setChildTwo(Swap2).setChildOne(Swap2.getChildOne()).setParent(Swap2.getParent());
-        }
-        if (Swap1.getChildOne() != null) {
-            Swap1.getChildOne().setParent(Swap1);
-        }
-        if(Swap1.getChildTwo() != null) {
-            Swap1.getChildTwo().setParent(Swap1);
-        }
-        Swap2.setParent(Swap1).setChildOne(tempChild1).setChildTwo(tempChild2);
+    private int[] swapHeapNodes(HeapNode<T> Swap1, HeapNode<T> Swap2){
+        HeapNode<T> currentParent = Swap2.getParent()==null || (Swap1.getParent() != null && Swap1.getParent()==Swap2) ? Swap2 : Swap1;
+        HeapNode<T> currentChild = Swap2.getParent()==null || (Swap1.getParent() != null && Swap1.getParent()==Swap2) ? Swap1 : Swap2;
+        int parentIndex = position.get(currentParent.value());
+        int childIndex = position.get(currentChild.value());
 
-        arr[parIndex]=Swap1;
-        arr[chiIndex]=Swap2;
+        T ParentObject = currentParent.value();
+        T ChildObject = currentChild.value();
 
-        if(Swap1.getParent()!=null){
-            if(Swap1.getParent().getChildOne() == Swap2){
-                Swap1.getParent().setChildOne(Swap1);
-            }else  if(Swap1.getParent().getChildTwo() == Swap2){
-                Swap1.getParent().setChildTwo(Swap1);
+        int ParentPriority = currentParent.getPriority();
+        int ChildPriority = currentChild.getPriority();
 
-            }
-        }
+        currentChild.update(ParentObject);
+        currentParent.update(ChildObject);
+        currentChild.setPriority(ParentPriority);
+        currentParent.setPriority(ChildPriority);
+        position.replace(ParentObject, childIndex);
+        position.replace(ChildObject, parentIndex);
 
-        position.replace((T)Swap1.value(), parIndex);
-        position.replace((T)Swap2.value(), chiIndex);
-
-        return parIndex;
+        return new int[]{parentIndex, childIndex};
     }
 
+    @SuppressWarnings("unchecked")
     public void startHeap(int N){
-        this.arr = new HeapNode[N];
-        for(HeapNode node : arr){
-            node=null;
+        this.arr = (HeapNode<T>[]) new HeapNode[N];
+        for (int i = 0; i < N; i++) {
+            this.arr[i] = null;
         }
     }
 
     public void insert(T value, int priority){
+        if(position.containsKey(value)){
+            return;
+        }
         int index = 0;
-        HeapNode parent = null;
+        HeapNode<T> parent = null;
         while(arr[index]!=null){
             if(arr[index] != null &&
-                    (arr[index].getChildOne() == null ||
-                            arr[index].getChildTwo() == null) &&
-                    parent == null){
+              (arr[index].getChildOne() == null ||
+              arr[index].getChildTwo() == null) &&
+              parent == null){
                 parent = arr[index];
             }
             index++;
         }
         position.put(value,index);
-        arr[index] = new HeapNode<T>(value, priority);
+        arr[index] = new HeapNode<>(value, priority);
         if(parent != null && parent.getChildOne()==null){
-            parent.setChildOne(arr[index].setParent(parent));
+            parent.setChildOne(arr[index]);
         }else if(parent != null && parent.getChildTwo()==null){
-            parent.setChildTwo(arr[index].setParent(parent));
+            parent.setChildTwo(arr[index]);
         }
         heapify_Up(index);
         length++;
+        this.checker();
     }
 
     public T findMin(){
-        return (T) arr[0].value();
+        return arr[0].value();
     }
 
     public void delete(int index){
-        HeapNode itemToDelete = arr[index];
-        itemToDelete.setPriority(Integer.MAX_VALUE);
+        T itemToDelete = arr[index].value();
+        arr[index].setPriority(Integer.MAX_VALUE);
         heapify_Down(index);
-        if(null!=itemToDelete.getParent()) {
-            if (itemToDelete == itemToDelete.getParent().getChildOne()) {
-                itemToDelete.getParent().setChildOne(null);
+
+        if(null!=arr[position.get(itemToDelete)].getParent()) {
+            if (arr[position.get(itemToDelete)] == arr[position.get(itemToDelete)].getParent().getChildOne()) {
+                arr[position.get(itemToDelete)].getParent().setChildOne(null);
             } else {
-                itemToDelete.getParent().setChildTwo(null);
+                arr[position.get(itemToDelete)].getParent().setChildTwo(null);
             }
         }
-        arr[position.get(itemToDelete.value())] = null;
+        arr[position.get(itemToDelete)] = null;
+        position.remove(itemToDelete);
         length--;
     }
 
@@ -265,28 +219,6 @@ class Heap<T> {
         T output = findMin();
         delete(0);
         return output;
-    }
-
-    public void delete(T item){
-        delete(position.get(item));
-    }
-
-    public void changePriority(T item, int newPriority){
-        int index = position.getOrDefault(item, -1);
-        if(index!=-1) {
-            HeapNode itemToRep = arr[index];
-            if (itemToRep.getPriority() > newPriority) {
-                itemToRep.setPriority(newPriority);
-                heapify_Up(index);
-            } else {
-                itemToRep.setPriority(newPriority);
-                heapify_Down(index);
-            }
-        }
-    }
-
-    public HeapNode<T> getHead(){
-        return arr[0];
     }
 
     public int length(){
@@ -298,10 +230,10 @@ class Heap<T> {
         return toStringRecursive(arr[0], "", true);
     }
 
-    private String toStringRecursive(HeapNode node, String prefix, boolean isLeft) {
+    private String toStringRecursive(HeapNode<T> node, String prefix, boolean isLeft) {
         StringBuilder output = new StringBuilder();
         if (node != null) {
-            output.append(prefix).append(isLeft ? "├── " : "└── ").append(node.toString()).append("\n").append(toStringRecursive(node.getChildOne(), prefix + (isLeft ? "│   " : "    "), true)).append(toStringRecursive(node.getChildTwo(), prefix + (isLeft ? "│   " : "    "), false));
+            output.append(prefix).append(isLeft ? "├── " : "└── ").append(node).append("\n").append(toStringRecursive(node.getChildOne(), prefix + (isLeft ? "│   " : "    "), true)).append(toStringRecursive(node.getChildTwo(), prefix + (isLeft ? "│   " : "    "), false));
         }
         return output.toString();
     }
@@ -315,38 +247,30 @@ class NearShortestRoute {
 
     @Override
     public String toString() {
-        String output = "";
+        StringBuilder output = new StringBuilder();
         for (NearShortestRoute.Node node: nodes){
             for(NearShortestRoute.Edge edge : node.getEdges()){
-                output += "Node: " + node.getName() + " to: " + edge.getDestination().getName() + " at " + edge.getDistance() + "\r\n";
+                output.append("Node: ").append(node.getName()).append(" to: ").append(edge.getDestination().getName()).append(" at ").append(edge.getDistance()).append("\r\n");
             }
-            output+="\r\n";
+            output.append(node.getEdges().size() == 0 ? "" : "\r\n");
         }
-        return output;
+        return output.toString();
     }
 
-    public class Node{
-        private ArrayList<NearShortestRoute.Edge> edges;
-        private int name;
+    public static class Node{
+        private final ArrayList<NearShortestRoute.Edge> edges;
+        private final int name;
 
-        private NearShortestRoute.Node previousNode = null;
-
-        public Node(int name, ArrayList<NearShortestRoute.Edge> edges){
-            this.edges = edges;
-            this.name = name;
-        }
+        private ArrayList<NearShortestRoute.Node> previousNodes;
 
         public Node(int name){
-            this(name, new ArrayList<NearShortestRoute.Edge>(0));
+            this.edges = new ArrayList<>(0);
+            this.previousNodes = new ArrayList<>(0);
+            this.name = name;
         }
 
         public NearShortestRoute.Node addEdge(NearShortestRoute.Edge edge){
             this.edges.add(edge);
-            return this;
-        }
-
-        public NearShortestRoute.Node addEdge(NearShortestRoute.Node destination, int distance){
-            this.addEdge(new NearShortestRoute.Edge(destination, distance));
             return this;
         }
 
@@ -379,28 +303,30 @@ class NearShortestRoute {
             return this.deleteEdge(this.getEdge(destination));
         }
 
-        public NearShortestRoute.Node getPreviousNode() {
-            return previousNode;
+        public ArrayList<NearShortestRoute.Node> getPreviousNode() {
+            return previousNodes;
         }
 
         public NearShortestRoute.Node setPreviousNode(NearShortestRoute.Node previousNode) {
-            this.previousNode = previousNode;
+            this.previousNodes = new ArrayList<>();
+            this.previousNodes.add(previousNode);
+            return this;
+        }
+
+        public NearShortestRoute.Node addPreviousNode(NearShortestRoute.Node previousNode){
+            this.previousNodes.add(previousNode);
             return this;
         }
 
         @Override
         public String toString() {
-            return "Node{" +
-                    "edges=" + edges.size() +
-                    ", name=" + name +
-                    ", previousNode=" + previousNode +
-                    '}';
+            return "From " + (previousNodes!=null && previousNodes.size()>0 ?previousNodes.get(0).getName():"None") + " -> " + name;
         }
     }
 
-    public class Edge{
-        private int distance;
-        private NearShortestRoute.Node destination;
+    public static class Edge{
+        private final int distance;
+        private final NearShortestRoute.Node destination;
 
         public Edge(NearShortestRoute.Node destination, int distance){
             this.destination = destination;
@@ -424,19 +350,19 @@ class NearShortestRoute {
         }
     }
 
-    public NearShortestRoute(int n) {
-        this.nodes = new ArrayList<NearShortestRoute.Node>(n);
+    public NearShortestRoute(int n, int e) {
+        this.nodes = new ArrayList<>(n);
         for(int i = 0; i< n; i++){
-            this.nodes.add(new NearShortestRoute.Node(i));
+            this.nodes.add(new Node(i));
         }
         this.distanceList = new int[n];
         this.haveVisited = new boolean[n];
-        this.hn = new Heap<NearShortestRoute.Edge>(n);
+        this.hn = new Heap<>(e);
         Arrays.fill(this.distanceList, -1);
     }
 
     public NearShortestRoute addEdge (int node, int destination, int distance){
-        nodes.get(node).addEdge(new NearShortestRoute.Edge(nodes.get(destination), distance));
+        nodes.get(node).addEdge(new Edge(nodes.get(destination), distance));
         return this;
     }
 
@@ -450,38 +376,49 @@ class NearShortestRoute {
         return this;
     }
 
-    public boolean removeEdge (int node, int destination){
-        return nodes.get(node).deleteEdge(destination);
+    public NearShortestRoute removeEdge (int node, int destination){
+        nodes.get(node).deleteEdge(destination);
+        return this;
     }
 
     public NearShortestRoute removeShortestPath(NearShortestRoute.Node previousNode){
-        while(previousNode!=null && previousNode.getPreviousNode()!=null){
-            this.removeEdge(previousNode.getPreviousNode().getName(), previousNode.getName());
-            previousNode = previousNode.getPreviousNode();
+        Queue<NearShortestRoute.Node> previousNodeList = new LinkedList<>();
+        previousNodeList.add(previousNode);
+        while(previousNodeList.size()>0){
+            for(int i = 0; i< (previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().size() : 0); i++){
+                if((previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode() : null) != null || (previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().size() : 0) >0) {
+                    this.removeEdge(previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().get(i).getName() : 0, previousNodeList.peek() != null ? previousNodeList.peek().getName() : 0);
+                    previousNodeList.add(previousNodeList.peek() != null ? previousNodeList.peek().getPreviousNode().get(i) : null);
+                }
+            }
+            previousNodeList.poll();
         }
         return this;
     }
 
     public NearShortestRoute.Node setShortestPath(int start, int finish){
-        ArrayList<NearShortestRoute.Edge> output = new ArrayList<NearShortestRoute.Edge>(0);
         this.distanceList[start] = 0;
-        this.hn.insert(new NearShortestRoute.Edge(nodes.get(start), 0), 0);
+        this.hn.insert(new Edge(nodes.get(start), 0), 0);
         while(hn.length() != 0){
             NearShortestRoute.Edge current = hn.extractMin();
             NearShortestRoute.Node currentNode = current.getDestination();
             this.haveVisited[currentNode.getName()] = true;
 
             ArrayList<NearShortestRoute.Edge> edges = this.nodes.get(currentNode.getName()).getEdges();
-
             for(int i = 0; i < this.nodes.get(currentNode.getName()).getEdgeCount(); i++){
                 int neighborName = edges.get(i).getDestination().getName();
                 int neighborDistance = edges.get(i).getDistance();
-                System.out.println("neightbor distance: " + neighborDistance);
                 if(     !haveVisited[neighborName] &&
                         distanceList[currentNode.getName()] != -1 &&
                         distanceList[currentNode.getName()] + neighborDistance < (distanceList[neighborName]<0?Integer.MAX_VALUE:distanceList[neighborName])){
                     distanceList[neighborName] = distanceList[currentNode.getName()] + neighborDistance;
                     edges.get(i).getDestination().setPreviousNode(currentNode);
+                    this.hn.insert(edges.get(i), distanceList[neighborName]);
+                }else if(     !haveVisited[neighborName] &&
+                        distanceList[currentNode.getName()] != -1 &&
+                        distanceList[currentNode.getName()] + neighborDistance == (distanceList[neighborName]<0?Integer.MAX_VALUE:distanceList[neighborName])) {
+                    distanceList[neighborName] = distanceList[currentNode.getName()] + neighborDistance;
+                    edges.get(i).getDestination().addPreviousNode(currentNode);
                     this.hn.insert(edges.get(i), distanceList[neighborName]);
                 }
             }
